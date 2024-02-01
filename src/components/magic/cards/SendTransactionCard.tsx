@@ -62,13 +62,6 @@ const SendTransaction = () => {
       gas: 21000,
     };
 
-    const txHash = await provider.sendTransaction({
-      from: aaAddress,
-      to: toAddress,
-      value: web3.utils.toWei(amount, 'ether'),
-      gas: 21000,
-    });
-
     web3.eth
       .sendTransaction(txnParams as any)
       .on('transactionHash', (txHash) => {
