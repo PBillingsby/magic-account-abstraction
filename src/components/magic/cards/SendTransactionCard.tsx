@@ -13,6 +13,8 @@ import TransactionHistory from '@/components/ui/TransactionHistory';
 import Image from 'next/image';
 import Link from 'public/link.svg';
 import { useWalletContext } from '@/components/alchemy/AlchemyProviderWrapper';
+import { SendUserOperationResult } from '@alchemy/aa-core';
+import { parseEther } from "viem";
 
 const SendTransaction = () => {
   const { provider } = useWalletContext();
@@ -55,32 +57,69 @@ const SendTransaction = () => {
       return setAmountError(true);
     }
     setDisabled(true);
-    const txnParams = {
-      from: aaAddress,
-      to: toAddress,
-      value: web3.utils.toWei(amount, 'ether'),
-      gas: 21000,
-    };
+    // const txnParams = {
+    //   // from: aaAddress,
+    //   to: toAddress,
+    //   value: web3.utils.toWei(amount, 'ether'),
+    //   gas: 21000,
+    // };
 
-    web3.eth
-      .sendTransaction(txnParams as any)
-      .on('transactionHash', (txHash) => {
-        setHash(txHash);
-        console.log('Transaction hash:', txHash);
-      })
-      .then((receipt) => {
-        showToast({
-          message: 'Transaction Successful',
-          type: 'success',
-        });
-        setToAddress('');
-        setAmount('');
-        console.log('Transaction receipt:', receipt);
-      })
-      .catch((error) => {
-        console.error("!", error);
-        setDisabled(false);
+    // const signer = await createSigner();
+    console.log("TO ADDRESS: ", toAddress)
+
+    const amountToSend: bigint = parseEther(amount);
+
+    try {
+      const result: SendUserOperationResult = await provider.sendUserOperation({
+        target: toAddress as `0x${string}`,
+        data: "0x",
+        value: amountToSend,
       });
+
+      const txHash = await provider.waitForUserOperationTransaction(
+        result.hash as `0x${string}`
+      );
+
+      console.log("\nTransaction hash: ", txHash);
+
+      const userOpReceipt = await provider.getUserOperationReceipt(
+        result.hash as `0x${string}`
+      );
+
+      console.log("\nUser operation receipt: ", userOpReceipt);
+
+      const txReceipt = await provider.rpcClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+    } catch (err) {
+      console.log("-------", err)
+    }
+    debugger
+    // setHash(txHash);
+
+    debugger
+
+    // await provider.sendTransaction(txnParams)
+
+    // web3.eth
+    //   .sendTransaction(txnParams as any)
+    //   .on('transactionHash', (txHash) => {
+    //     setHash(txHash);
+    //     console.log('Transaction hash:', txHash);
+    //   })
+    //   .then((receipt) => {
+    //     showToast({
+    //       message: 'Transaction Successful',
+    //       type: 'success',
+    //     });
+    //     setToAddress('');
+    //     setAmount('');
+    //     console.log('Transaction receipt:', receipt);
+    //   })
+    //   .catch((error) => {
+    //     console.error("!", error);
+    //     setDisabled(false);
+    //   });
   }, [web3, amount, publicAddress, toAddress]);
 
   return (

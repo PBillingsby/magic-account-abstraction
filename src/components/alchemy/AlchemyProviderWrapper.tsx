@@ -63,26 +63,20 @@ export const WalletContextProvider = ({
       if (!didToken || !metadata?.publicAddress || !metadata.email) {
         throw new Error("Magic login failed");
       }
-
-      connectProviderToAccount(magicSigner);
-      // setUsername(metadata.email);
-      // setOwnerAddress(metadata.publicAddress as Address);
-      setScaAddress(await provider.getAddress());
+      if (magicSigner) {
+        connectProviderToAccount(magicSigner);
+        setScaAddress(await provider.getAddress());
+      }
     },
     [magic, connectProviderToAccount, magicSigner, provider]
   );
 
   useEffect(() => {
     async function fetchData() {
-      const metadata = await magic?.user?.getMetadata();
-      if (!metadata?.publicAddress || !metadata?.email) {
-        throw new Error("Magic login failed");
+      if (magicSigner) {
+        connectProviderToAccount(magicSigner);
+        setScaAddress(await provider.getAddress());
       }
-
-      connectProviderToAccount(magicSigner);
-      // setUsername(metadata.email);
-      // setOwnerAddress(metadata.publicAddress as Address);
-      setScaAddress(await provider.getAddress());
     }
     fetchData();
   }, [magic, connectProviderToAccount, magicSigner, provider]);
